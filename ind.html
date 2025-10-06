@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Online Fitness Trainer - Your 3D Fitness Trainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js for 3D rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark gray background */
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 100%);
+        }
+        .card-bg {
+            background-color: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        #exercise-modal {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        #exercise-viewer {
+            width: 100%;
+            height: 400px;
+            cursor: grab;
+        }
+        #exercise-viewer:active {
+            cursor: grabbing;
+        }
+        .exercise-btn {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #d1d5db;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            text-align: left;
+        }
+        .exercise-btn:hover {
+            background-color: #4b5563;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #planOutput, #planOutput * {
+                visibility: visible;
+            }
+            #planOutput {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- Header -->
+    <header class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-blue-400 flex items-center">
+                <i data-lucide="dumbbell" class="mr-2"></i>
+                Fit Online
+            </a>
+            <div class="hidden md:flex space-x-6 items-center">
+                <a href="#home" class="hover:text-blue-400 transition-colors">Home</a>
+                <a href="#generator" class="hover:text-blue-400 transition-colors">Plan Generator</a>
+                <a href="#about" class="hover:text-blue-400 transition-colors">About</a>
+                <a href="#contact" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Get Started</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden">
+                <i data-lucide="menu"></i>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#home" class="block py-2 hover:text-blue-400 transition-colors">Home</a>
+            <a href="#generator" class="block py-2 hover:text-blue-400 transition-colors">Plan Generator</a>
+            <a href="#about" class="block py-2 hover:text-blue-400 transition-colors">About</a>
+            <a href="#contact" class="block mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-center">Get Started</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero-gradient min-h-[60vh] flex items-center">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Visualize Your Perfect Form with 3D Models</h1>
+                <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">Stop guessing. Get a data-driven workout plan with interactive 3D animations for every exercise.</p>
+                <a href="#generator" class="bg-white text-blue-700 font-bold py-3 px-8 rounded-full text-lg hover:bg-gray-200 transition-transform hover:scale-105 transform">Create My Free Plan</a>
+            </div>
+        </section>
+
+        <!-- AI Plan Generator Section -->
+        <section id="generator" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white"> Fitness Plan Generator</h2>
+                    <p class="text-gray-400 mt-2">Fill in your details to generate a custom plan with 3D exercise guides.</p>
+                </div>
+
+                <div class="max-w-4xl mx-auto card-bg p-8 rounded-2xl border border-gray-700 shadow-2xl">
+                    <form id="fitness-form">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="age" class="block text-sm font-medium text-gray-300 mb-1">Age</label>
+                                <input type="number" id="age" class="w-full bg-gray-800 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 25" required>
+                            </div>
+                            <div>
+                                <label for="gender" class="block text-sm font-medium text-gray-300 mb-1">Gender</label>
+                                <select id="gender" class="w-full bg-gray-800 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="weight" class="block text-sm font-medium text-gray-300 mb-1">Weight (kg)</label>
+                                <input type="number" id="weight" class="w-full bg-gray-800 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 70" required>
+                            </div>
+                            <div>
+                                <label for="height" class="block text-sm font-medium text-gray-300 mb-1">Height (cm)</label>
+                                <input type="number" id="height" class="w-full bg-gray-800 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 180" required>
+                            </div>
+                            <div>
+                                <label for="goal" class="block text-sm font-medium text-gray-300 mb-1">Primary Goal</label>
+                                <select id="goal" class="w-full bg-gray-800 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                                    <option value="lose-weight">Fat Loss</option>
+                                    <option value="build-muscle">Muscle Gain</option>
+                                    <option value="maintain">Maintain Fitness</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="experience" class="block text-sm font-medium text-gray-300 mb-1">Experience Level</label>
+                                <select id="experience" class="w-full bg-gray-800 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </div>
+                             <div class="md:col-span-2">
+                                <label for="diet" class="block text-sm font-medium text-gray-300 mb-1">Dietary Preference</label>
+                                <select id="diet" class="w-full bg-gray-800 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                                    <option value="anything">Anything</option>
+                                    <option value="vegetarian">Vegetarian</option>
+                                    <option value="vegan">Vegan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="error-message" class="text-red-400 mt-4 text-center hidden"></div>
+                        <button type="submit" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-lg text-lg transition-transform hover:scale-105 transform flex items-center justify-center">
+                            <i data-lucide="sparkles" class="mr-2"></i>Generate My Plan
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Plan Output -->
+                <div id="planOutput" class="mt-16 max-w-5xl mx-auto hidden">
+                     <div class="text-center">
+                         <h2 class="text-3xl md:text-4xl font-bold text-white">Your Custom Fitness Plan</h2>
+                         <p class="text-gray-400 mt-2">Click on an exercise to see a 3D animation.</p>
+                     </div>
+                     <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="card-bg p-6 rounded-2xl border border-gray-700">
+                           <h3 class="text-2xl font-bold text-blue-400 mb-4 flex items-center"><i data-lucide="activity" class="mr-3"></i>Workout Schedule</h3>
+                           <div id="workout-plan" class="space-y-3 text-gray-300"></div>
+                        </div>
+                        <div class="card-bg p-6 rounded-2xl border border-gray-700">
+                             <h3 class="text-2xl font-bold text-green-400 mb-4 flex items-center"><i data-lucide="leaf" class="mr-3"></i>Daily Meal Guide</h3>
+                            <div id="diet-plan" class="space-y-4 text-gray-300"></div>
+                        </div>
+                     </div>
+                     <div class="text-center mt-8">
+                        <button id="print-plan" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors flex items-center justify-center mx-auto">
+                           <i data-lucide="printer" class="mr-2"></i> Print Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="about" class="py-20 bg-gray-800">
+            <div class="container mx-auto px-6">
+                 <div class="flex flex-col md:flex-row items-center gap-12">
+                     <div class="md:w-1/3">
+                        <img src="https://placehold.co/400x400/1E3A8A/FFFFFF?text=Coach" alt="Fitness Coach" class="rounded-full shadow-2xl mx-auto border-4 border-blue-500" onerror="this.onerror=null;this.src='https://placehold.co/400x400/1E3A8A/FFFFFF?text=AI';">
+                     </div>
+                     <div class="md:w-2/3 text-center md:text-left">
+                         <h2 class="text-3xl md:text-4xl font-bold text-white">About Your Fitness Coach</h2>
+                         <p class="text-gray-400 mt-4 text-lg">I'm Fit Online, a virtual trainer designed by certified fitness experts and nutritionists. My purpose is to eliminate the confusion around fitness by providing clear, effective, and personalized guidance. I analyze your data to craft a unique plan that evolves with you, ensuring you always have the optimal strategy to reach your goals safely and efficiently.</p>
+                         <p class="text-gray-400 mt-4 text-lg">No fads, no quick fixes—just science-backed principles tailored for you. </p>
+                         <p class="text-gray-400 mt-4 text-lg">@Yash @Vedant @Soham @Parth </p>
+                     </div>
+                 </div>
+            </div>
+        </section>
+
+        <footer id="contact" class="bg-gray-800">
+             <div class="container mx-auto px-6 py-8 text-center text-gray-400">
+                <div class="flex justify-center space-x-6 mb-4">
+                    <a href="#" class="hover:text-blue-400"><i data-lucide="twitter"></i></a>
+                    <a href="#" class="hover:text-blue-400"><i data-lucide="instagram"></i></a>
+                    <a href="#" class="hover:text-blue-400"><i data-lucide="facebook"></i></a>
+                </div>
+                <p>&copy; 2025 Fit Online. All Rights Reserved.</p>
+                <p class="text-sm text-gray-500 mt-2">Disclaimer: Consult with a healthcare professional before starting any new fitness or nutrition program.</p>
+             </div>
+        </footer>
+    </main>
+
+    <!-- 3D Exercise Modal -->
+    <div id="exercise-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="card-bg rounded-2xl border border-gray-700 shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="exercise-title" class="text-2xl font-bold text-white">Exercise Name</h3>
+                    <button id="close-modal-btn" class="text-gray-400 hover:text-white">
+                        <i data-lucide="x" class="w-8 h-8"></i>
+                    </button>
+                </div>
+                <div id="exercise-viewer" class="bg-gray-800 rounded-lg border border-gray-600"></div>
+                <div class="mt-4 text-center text-gray-400">
+                    <p>Click and drag to rotate the model.</p>
+                </div>
+                <div class="mt-4 flex justify-center space-x-4">
+                     <button id="anim-reset" class="bg-gray-600 hover:bg-gray-700 p-3 rounded-lg"><i data-lucide="rotate-ccw"></i></button>
+                     <button id="anim-toggle" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-lg"><i data-lucide="pause"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Standard Website Interactivity ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        const form = document.getElementById('fitness-form');
+        const planOutput = document.getElementById('planOutput');
+        const workoutPlanContainer = document.getElementById('workout-plan');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const goal = document.getElementById('goal').value;
+            const experience = document.getElementById('experience').value;
+            const diet = document.getElementById('diet').value;
+
+            const workoutPlanHTML = generateWorkoutHTML(goal, experience);
+            const dietPlan = generateDiet(goal, diet);
+
+            workoutPlanContainer.innerHTML = workoutPlanHTML;
+            document.getElementById('diet-plan').innerHTML = dietPlan;
+            lucide.createIcons(); // Re-render icons for new buttons
+            
+            planOutput.classList.remove('hidden');
+            planOutput.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        document.getElementById('print-plan').addEventListener('click', () => { window.print(); });
+
+        // --- 3D Modal and Animation Logic ---
+        const modal = document.getElementById('exercise-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const exerciseTitle = document.getElementById('exercise-title');
+        const viewerContainer = document.getElementById('exercise-viewer');
+        const animToggleButton = document.getElementById('anim-toggle');
+        const animResetButton = document.getElementById('anim-reset');
+
+        let scene, camera, renderer, humanoid, animationId, isPlaying = true, clock;
+        let currentExerciseUpdate = null;
+
+        // Event listener for opening the modal
+        workoutPlanContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('.exercise-btn');
+            if (button) {
+                const exercise = button.dataset.exercise;
+                const exerciseName = button.dataset.name;
+                exerciseTitle.textContent = exerciseName;
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                if (!renderer) {
+                    initThree();
+                }
+                loadExercise(exercise);
+            }
+        });
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            isPlaying = true;
+            updatePlayPauseIcon();
+        }
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        animToggleButton.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            updatePlayPauseIcon();
+        });
+
+        animResetButton.addEventListener('click', () => {
+             if (clock) clock.elapsedTime = 0; // Reset animation time
+        });
+
+        function updatePlayPauseIcon() {
+            animToggleButton.innerHTML = isPlaying ? `<i data-lucide="pause"></i>` : `<i data-lucide="play"></i>`;
+            lucide.createIcons();
+        }
+
+        function initThree() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x374151); // bg-gray-700
+            clock = new THREE.Clock();
+
+            camera = new THREE.PerspectiveCamera(50, viewerContainer.clientWidth / viewerContainer.clientHeight, 0.1, 1000);
+            camera.position.set(0, 1.5, 5);
+            camera.lookAt(0, 1, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(viewerContainer.clientWidth, viewerContainer.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            viewerContainer.innerHTML = ''; // Clear previous canvas
+            viewerContainer.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7.5);
+            scene.add(directionalLight);
+
+            const floorGeometry = new THREE.PlaneGeometry(10, 10);
+            const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x4b5563 }); // bg-gray-600
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+            
+            humanoid = createHumanoid();
+            scene.add(humanoid);
+
+            let isDragging = false;
+            let previousMousePosition = { x: 0 };
+            viewerContainer.addEventListener('mousedown', e => { 
+                isDragging = true; 
+                previousMousePosition = { x: e.clientX };
+            });
+            viewerContainer.addEventListener('mouseup', () => { isDragging = false; });
+            viewerContainer.addEventListener('mouseleave', () => { isDragging = false; });
+            viewerContainer.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                humanoid.rotation.y += deltaX * 0.01;
+                previousMousePosition = { x: e.clientX };
+            });
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+        
+        function onWindowResize() {
+            if (!renderer) return;
+            camera.aspect = viewerContainer.clientWidth / viewerContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewerContainer.clientWidth, viewerContainer.clientHeight);
+        }
+
+        function createHumanoid() {
+            const group = new THREE.Group();
+            const material = new THREE.MeshStandardMaterial({ color: 0x1e3a8a });
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.4), material);
+            torso.position.y = 1.2;
+            group.add(torso);
+            group.torso = torso;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), material);
+            head.position.y = 2.1;
+            group.add(head);
+            group.head = head;
+            const armGeo = new THREE.BoxGeometry(0.2, 0.9, 0.2);
+            const leftArm = new THREE.Mesh(armGeo, material);
+            leftArm.position.set(-0.6, 1.4, 0);
+            group.add(leftArm);
+            group.leftArm = leftArm;
+            const rightArm = new THREE.Mesh(armGeo, material);
+            rightArm.position.set(0.6, 1.4, 0);
+            group.add(rightArm);
+            group.rightArm = rightArm;
+            const legGeo = new THREE.BoxGeometry(0.3, 1.2, 0.3);
+            const leftLeg = new THREE.Mesh(legGeo, material);
+            leftLeg.position.set(-0.25, 0.6, 0);
+            group.add(leftLeg);
+            group.leftLeg = leftLeg;
+            const rightLeg = new THREE.Mesh(legGeo, material);
+            rightLeg.position.set(0.25, 0.6, 0);
+            group.add(rightLeg);
+            group.rightLeg = rightLeg;
+            return group;
+        }
+
+        function loadExercise(exercise) {
+            // Reset to T-pose
+            humanoid.traverse(child => {
+                if (child.isMesh) {
+                    child.rotation.set(0,0,0);
+                    child.position.set(0,0,0);
+                }
+            });
+            humanoid.position.set(0,0,0);
+            humanoid.rotation.set(0,0,0);
+            
+            // Re-apply original positions after reset
+            humanoid.torso.position.y = 1.2;
+            humanoid.head.position.y = 2.1;
+            humanoid.leftArm.position.set(-0.6, 1.4, 0);
+            humanoid.rightArm.position.set(0.6, 1.4, 0);
+            humanoid.leftLeg.position.set(-0.25, 0.6, 0);
+            humanoid.rightLeg.position.set(0.25, 0.6, 0);
+            
+            clock.stop();
+            clock.start();
+            currentExerciseUpdate = exerciseAnimations[exercise] || null;
+        }
+
+        const exerciseAnimations = {
+            squat: (time) => {
+                const progress = (Math.sin(time * 2) + 1) / 2;
+                const squatAngle = THREE.MathUtils.lerp(0, -Math.PI / 2, progress);
+                humanoid.leftLeg.rotation.x = squatAngle;
+                humanoid.rightLeg.rotation.x = squatAngle;
+                humanoid.position.y = THREE.MathUtils.lerp(0, -0.6, progress);
+                humanoid.torso.rotation.x = THREE.MathUtils.lerp(0, Math.PI / 8, progress);
+            },
+            pushup: (time) => {
+                humanoid.rotation.x = -Math.PI / 2;
+                const progress = (Math.sin(time * 2) + 1) / 2;
+                const armAngle = THREE.MathUtils.lerp(-Math.PI / 2, 0, progress);
+                humanoid.leftArm.rotation.x = armAngle;
+                humanoid.rightArm.rotation.x = armAngle;
+            },
+            bicep_curl: (time) => {
+                const progress = (Math.sin(time * 3) + 1) / 2;
+                const armAngle = THREE.MathUtils.lerp(0, Math.PI * 0.75, progress);
+                humanoid.leftArm.rotation.x = armAngle;
+                humanoid.rightArm.rotation.x = armAngle;
+            },
+             rows: (time) => {
+                const progress = (Math.sin(time * 2) + 1) / 2;
+                const torsoAngle = Math.PI / 4;
+                const armAngle = THREE.MathUtils.lerp(0, -Math.PI / 2, progress);
+                humanoid.torso.rotation.x = torsoAngle;
+                humanoid.leftArm.rotation.x = armAngle + torsoAngle;
+                humanoid.rightArm.rotation.x = armAngle + torsoAngle;
+            },
+            lunges: (time) => {
+                const progress = (Math.sin(time * 2) + 1) / 2;
+                const lungeDepth = THREE.MathUtils.lerp(0, -0.4, progress);
+                const legAngle = THREE.MathUtils.lerp(0, Math.PI / 2.5, progress);
+                humanoid.position.y = lungeDepth;
+                humanoid.rightLeg.rotation.x = -legAngle;
+                humanoid.leftLeg.rotation.x = legAngle / 2;
+                humanoid.rightLeg.position.z = THREE.MathUtils.lerp(0, 0.4, progress);
+                humanoid.leftLeg.position.z = THREE.MathUtils.lerp(0, -0.4, progress);
+            },
+        };
+
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            if (isPlaying && currentExerciseUpdate) {
+                const elapsedTime = clock.getElapsedTime();
+                currentExerciseUpdate(elapsedTime);
+            }
+            if(renderer) renderer.render(scene, camera);
+        }
+
+        // --- Content Generation Logic ---
+        function generateWorkoutHTML(goal, experience) {
+            const exercises = {
+                squat: { name: 'Squats', sets: '3x10' },
+                pushup: { name: 'Push-ups', sets: '3xAMRAP' },
+                rows: { name: 'Rows', sets: '3x10' },
+                lunges: { name: 'Lunges', sets: '3x12/leg' },
+                overhead_press: { name: 'Overhead Press', sets: '3x8' },
+                bicep_curl: { name: 'Bicep Curls', sets: '3x12' },
+                deadlift: { name: 'Deadlifts', sets: '3x5' },
+                pullups: { name: 'Pull-ups', sets: '3xAMRAP' },
+            };
+
+            const structure = {
+                 'lose-weight': {
+                    beginner: `<strong>Day 1:</strong> ${createExerciseButton('squat', exercises.squat)}, ${createExerciseButton('pushup', exercises.pushup)}, ${createExerciseButton('rows', exercises.rows)}<br><strong>Day 2:</strong> 30 min Light Cardio (Walk/Jog)<br><strong>Day 3:</strong> ${createExerciseButton('lunges', exercises.lunges)}, ${createExerciseButton('overhead_press', exercises.overhead_press)}, Plank 3x30s<br><strong>Day 4:</strong> Rest<br><strong>Day 5:</strong> Repeat Day 1`,
+                    intermediate: `<strong>Day 1 (Upper):</strong> ${createExerciseButton('pushup', {name: 'Bench Press', sets: '4x8'})}, ${createExerciseButton('rows', {name: 'Barbell Rows', sets: '4x8'})}, ${createExerciseButton('overhead_press', exercises.overhead_press)}<br><strong>Day 2 (Lower):</strong> ${createExerciseButton('squat', {name: 'Squats', sets: '4x8'})}, ${createExerciseButton('lunges', exercises.lunges)}, Leg Curls 3x12<br><strong>Day 3:</strong> 20 min HIIT Cardio<br><strong>Day 4:</strong> Rest<br><strong>Day 5 (Full Body):</strong> ${createExerciseButton('deadlift', exercises.deadlift)}, ${createExerciseButton('pullups', exercises.pullups)}, ${createExerciseButton('bicep_curl', exercises.bicep_curl)}`,
+                    advanced: `<strong>Day 1 (Push):</strong> ${createExerciseButton('pushup', {name: 'Incline Press', sets: '4x10'})}, Dips 3xAMRAP, ${createExerciseButton('overhead_press', {name: 'DB Press', sets: '4x10'})}<br><strong>Day 2 (Pull):</strong> ${createExerciseButton('pullups', exercises.pullups)}, ${createExerciseButton('rows', {name: 'T-Bar Rows', sets: '4x10'})}, ${createExerciseButton('bicep_curl', exercises.bicep_curl)}<br><strong>Day 3 (Legs):</strong> ${createExerciseButton('squat', {name: 'Heavy Squats', sets: '5x5'})}, ${createExerciseButton('lunges', {name: 'Walking Lunges', sets: '3x20'})}<br><strong>Day 4:</strong> Rest<br><strong>Day 5:</strong> Upper Body Hypertrophy<br><strong>Day 6:</strong> Lower Body Hypertrophy`
+                },
+                'build-muscle': {
+                    beginner: `<strong>Day 1:</strong> ${createExerciseButton('squat', exercises.squat)}, ${createExerciseButton('pushup', {name: 'Bench Press', sets: '3x8'})}, ${createExerciseButton('rows', {name: 'Barbell Rows', sets: '3x8'})}<br><strong>Day 2:</strong> Rest<br><strong>Day 3:</strong> ${createExerciseButton('overhead_press', exercises.overhead_press)}, ${createExerciseButton('pullups', {name: 'Lat Pulldowns', sets: '3x10'})}, ${createExerciseButton('lunges', exercises.lunges)}<br><strong>Day 4:</strong> Rest<br><strong>Day 5:</strong> ${createExerciseButton('deadlift', exercises.deadlift)}, ${createExerciseButton('bicep_curl', exercises.bicep_curl)}, Face Pulls 3x15`,
+                    intermediate: `<strong>Day 1 (Upper):</strong> Heavy Bench Press 5x5, Heavy Rows 5x5, ${createExerciseButton('overhead_press', exercises.overhead_press)}<br><strong>Day 2 (Lower):</strong> Heavy Squats 5x5, ${createExerciseButton('deadlift', {name: 'RDLs', sets: '3x10'})}, Leg Press 3x10<br><strong>Day 3:</strong> Rest<br><strong>Day 4 (Upper):</strong> Incline DB Press 4x10, ${createExerciseButton('pullups', exercises.pullups)}, ${createExerciseButton('bicep_curl', exercises.bicep_curl)}<br><strong>Day 5 (Lower):</strong> Front Squats 4x10, ${createExerciseButton('lunges', exercises.lunges)}, Hamstring Curls 4x12`,
+                    advanced: `<strong>Day 1 (Push):</strong> ${createExerciseButton('pushup', {name: 'Incline Bench', sets: '4x10'})}, Flyes 3x12, ${createExerciseButton('overhead_press', {name: 'DB Press', sets: '4x10'})}<br><strong>Day 2 (Pull):</strong> Weighted Pull-ups 4x8, ${createExerciseButton('rows', {name: 'DB Rows', sets: '4x10'})}, ${createExerciseButton('bicep_curl', {name: 'Hammer Curls', sets: '3x12'})}<br><strong>Day 3 (Legs):</strong> ${createExerciseButton('squat', exercises.squat)}, Leg Press 4x12, ${createExerciseButton('lunges', exercises.lunges)}<br><strong>Day 4:</strong> Rest<br><strong>Day 5:</strong> Repeat Push<br><strong>Day 6:</strong> Repeat Pull<br><strong>Day 7:</strong> Repeat Legs`
+                },
+                'maintain': {
+                    beginner: `<strong>Day 1:</strong> ${createExerciseButton('squat', exercises.squat)}, ${createExerciseButton('pushup', exercises.pushup)}, Plank 3x30s<br><strong>Day 2:</strong> Rest<br><strong>Day 3:</strong> 30 min Cardio (Brisk Walk)<br><strong>Day 4:</strong> Rest<br><strong>Day 5:</strong> ${createExerciseButton('lunges', exercises.lunges)}, ${createExerciseButton('rows', exercises.rows)}, Glute Bridges 3x15`,
+                    intermediate: `<strong>Day 1 (Upper):</strong> ${createExerciseButton('pushup', {name: 'Bench Press', sets: '3x10'})}, ${createExerciseButton('rows', exercises.rows)}, ${createExerciseButton('overhead_press', exercises.overhead_press)}<br><strong>Day 2:</strong> Rest<br><strong>Day 3 (Lower):</strong> ${createExerciseButton('squat', exercises.squat)}, ${createExerciseButton('lunges', exercises.lunges)}, Calf Raises 3x20<br><strong>Day 4:</strong> Rest<br><strong>Day 5 (Optional):</strong> 30 min Cardio or Activity`,
+                    advanced: `<strong>Day 1 (Push):</strong> Push-ups, Dips, Shoulder Press<br><strong>Day 2 (Pull):</strong> Pull-ups, Rows, Bicep Curls<br><strong>Day 3 (Legs):</strong> Squats, Lunges, Deadlifts<br><strong>Day 4:</strong> Rest<br><strong>Day 5 (Full Body):</strong> Pick one exercise from each day`
+                }
+            };
+            return structure[goal][experience];
+        }
+
+        function createExerciseButton(id, {name, sets}) {
+            if (exerciseAnimations[id]) {
+                return `<button class="exercise-btn" data-exercise="${id}" data-name="${name}"><span>${name} <span class="text-gray-400 text-sm">${sets}</span></span><i data-lucide="play-circle" class="text-blue-400"></i></button>`;
+            }
+            return `<div class="p-2">${name} <span class="text-gray-400 text-sm">${sets}</span></div>`;
+        }
+        
+        function generateDiet(goal, diet) {
+            const baseMeals = {
+                protein: { anything: 'Chicken Breast, Salmon, Eggs, Greek Yogurt', vegetarian: 'Tofu, Lentils, Chickpeas, Greek Yogurt', vegan: 'Tofu, Lentils, Chickpeas, Seitan' },
+                carbs: { anything: 'Oats, Brown Rice, Quinoa, Sweet Potatoes', vegetarian: 'Oats, Brown Rice, Quinoa, Sweet Potatoes', vegan: 'Oats, Brown Rice, Quinoa, Sweet Potatoes' },
+                fats: { anything: 'Avocado, Nuts, Olive Oil, Seeds', vegetarian: 'Avocado, Nuts, Olive Oil, Seeds', vegan: 'Avocado, Nuts, Olive Oil, Seeds' },
+            };
+
+            let mealStructure = `
+                <p><strong>Breakfast:</strong> Protein (${baseMeals.protein[diet]}) + Carbs (${baseMeals.carbs[diet]})</p>
+                <p><strong>Lunch:</strong> Protein (${baseMeals.protein[diet]}) + Veggies + Fats (${baseMeals.fats[diet]})</p>
+                <p><strong>Dinner:</strong> Protein (${baseMeals.protein[diet]}) + Veggies + Carbs (${baseMeals.carbs[diet]})</p>
+                <p><strong>Snacks:</strong> Fruit, nuts, protein shake, or yogurt.</p>
+            `;
+
+            if (goal === 'lose-weight') {
+                return `<strong>Goal: Caloric Deficit</strong><p>Focus on portion control. Aim for a plate that is 50% vegetables, 25% protein, and 25% complex carbs.</p>${mealStructure}<p><strong>Tip:</strong> Drink plenty of water and minimize processed foods.</p>`;
+            } else if (goal === 'build-muscle') {
+                return `<strong>Goal: Caloric Surplus</strong><p>Increase portion sizes, especially for protein and carbs. Aim for 1.6-2.2g of protein per kg of bodyweight.</p>${mealStructure}<p><strong>Tip:</strong> Add a protein-rich snack. Fuel your workouts.</p>`;
+            } else { // Maintain
+                return `<strong>Goal: Maintenance Calories</strong><p>Focus on balanced, whole foods for sustained energy.</p>${mealStructure}<p><strong>Tip:</strong> Listen to your body's hunger cues. Consistency is key.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
